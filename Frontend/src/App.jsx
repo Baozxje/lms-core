@@ -13,6 +13,8 @@ import ErrorPage from './pages/ErrorPage.jsx'
 import CourseManagement from './pages/CourseManagement.jsx'
 import StudentManagement from './pages/StudentManagement.jsx'
 import Settings from './pages/Settings.jsx'
+import Register from './pages/Register.jsx'
+import ConfirmSignup from './pages/ConfirmSignup.jsx'
 
 export default function App() {
   return (
@@ -20,11 +22,13 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/confirm" element={<ConfirmSignup />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/exam" element={<ExamRoom />} />
+        <Route path="/exam/:examId" element={<ExamRoom />} />
         <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/course" element={<CourseDetail />} />
-        <Route path="/exam-checkin" element={<ExamCheckIn />} />
+        <Route path="/course/:id" element={<CourseDetail />} />
+        <Route path="/exam-checkin/:examId" element={<ExamCheckIn />} />
         <Route path="/exam-submitted" element={<ExamSubmitted />} />
         <Route path="/history" element={<ExamHistory />} />
         <Route path="/report" element={<AIReport />} />

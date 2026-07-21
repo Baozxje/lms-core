@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
 const rules = [
   'Giữ khuôn mặt trong khung hình camera trong suốt quá trình thi.',
@@ -12,6 +12,8 @@ const rules = [
 const steps = ['Kiểm tra thiết bị', 'Xác thực danh tính', 'Quy chế thi']
 
 export default function ExamCheckIn() {
+  const { examId } = useParams()
+  const navigate = useNavigate()
   const [step, setStep] = useState(0)
   const [camOk, setCamOk] = useState(null)
   const [micOk, setMicOk] = useState(null)
@@ -19,7 +21,6 @@ export default function ExamCheckIn() {
   const [capturing, setCapturing] = useState(false)
   const [captured, setCaptured] = useState(false)
   const videoRef = useRef(null)
-  const navigate = useNavigate()
 
   useEffect(() => {
     let stream
@@ -49,17 +50,12 @@ export default function ExamCheckIn() {
   return (
     <div className="min-h-screen bg-ivory flex items-center justify-center p-6">
       <div className="w-full max-w-lg">
-        {/* Stepper */}
         <div className="flex items-center gap-2 mb-8">
           {steps.map((s, i) => (
             <div key={s} className="flex items-center gap-2 flex-1">
               <div
                 className={`w-7 h-7 shrink-0 rounded-full flex items-center justify-center font-mono text-xs ${
-                  i < step
-                    ? 'bg-success text-white'
-                    : i === step
-                    ? 'bg-navy text-ivory'
-                    : 'bg-navy/10 text-slate-soft'
+                  i < step ? 'bg-success text-white' : i === step ? 'bg-navy text-ivory' : 'bg-navy/10 text-slate-soft'
                 }`}
               >
                 {i < step ? '✓' : i + 1}
@@ -118,7 +114,13 @@ export default function ExamCheckIn() {
 
               <div className="mt-6 bg-navy rounded-lg aspect-video relative overflow-hidden flex items-center justify-center">
                 <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
-                <div className="absolute inset-0 border-4 border-amber/0 m-10 rounded-full" style={{ borderColor: captured ? '#3E7C59' : capturing ? '#D9A24B' : 'transparent', transition: 'border-color 0.3s' }} />
+                <div
+                  className="absolute inset-0 border-4 m-10 rounded-full"
+                  style={{
+                    borderColor: captured ? '#3E7C59' : capturing ? '#D9A24B' : 'transparent',
+                    transition: 'border-color 0.3s',
+                  }}
+                />
                 {capturing && (
                   <span className="absolute bottom-3 font-body text-xs text-amber bg-black/40 px-2 py-1 rounded">
                     Đang xác thực khuôn mặt…
@@ -182,7 +184,7 @@ export default function ExamCheckIn() {
 
               <button
                 disabled={!agreed}
-                onClick={() => navigate('/exam')}
+                onClick={() => navigate(`/exam/${examId}`)}
                 className="w-full mt-6 font-body text-sm bg-amber text-navy font-medium py-2.5 rounded-md hover:bg-amber-dark transition-colors disabled:opacity-30 disabled:hover:bg-amber"
               >
                 Vào phòng thi
@@ -199,11 +201,7 @@ function CheckRow({ label, ok }) {
   return (
     <div className="flex items-center justify-between font-body text-sm">
       <span className="text-navy">{label}</span>
-      <span
-        className={
-          ok === null ? 'text-slate-soft' : ok ? 'text-success' : 'text-danger'
-        }
-      >
+      <span className={ok === null ? 'text-slate-soft' : ok ? 'text-success' : 'text-danger'}>
         {ok === null ? 'Đang kiểm tra…' : ok ? '✓ Hoạt động tốt' : '✕ Không phát hiện'}
       </span>
     </div>

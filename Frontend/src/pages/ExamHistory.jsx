@@ -1,98 +1,65 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { getMyAttempts } from '../api/attempts.js'
 
-const history = [
-  {
-    id: 'SES-1042',
-    course: 'Cấu trúc dữ liệu & giải thuật',
-    code: 'CS201',
-    type: 'Thi cuối kỳ',
-    date: '20/07/2026',
-    duration: '42 phút',
-    score: null,
-    status: 'grading',
-    riskLevel: 'normal',
-  },
-  {
-    id: 'SES-0998',
-    course: 'Cấu trúc dữ liệu & giải thuật',
-    code: 'CS201',
-    type: 'Kiểm tra giữa kỳ',
-    date: '05/06/2026',
-    duration: '38 phút',
-    score: 8.5,
-    status: 'graded',
-    riskLevel: 'normal',
-  },
-  {
-    id: 'SES-0876',
-    course: 'Cơ sở dữ liệu',
-    code: 'CS304',
-    type: 'Thi giữa kỳ',
-    date: '25/05/2026',
-    duration: '40 phút',
-    score: 6.0,
-    status: 'graded',
-    riskLevel: 'flagged',
-  },
-  {
-    id: 'SES-0721',
-    course: 'Nhập môn lập trình',
-    code: 'CS101',
-    type: 'Thi cuối kỳ',
-    date: '12/01/2026',
-    duration: '55 phút',
-    score: 9.2,
-    status: 'graded',
-    riskLevel: 'normal',
-  },
-]
-
-const riskStyle = {
-  normal: { label: 'Bình thường', color: 'text-success', dot: 'bg-success' },
-  flagged: { label: 'Có cảnh báo', color: 'text-amber-dark', dot: 'bg-amber' },
+const statusMap = {
+  COMPLETED: { label: 'Đã chấm', color: 'text-success', dot: 'bg-success' },
+  PENDING_GRADING: { label: 'Đang chấm', color: 'text-amber-dark', dot: 'bg-amber' },
 }
 
 export default function ExamHistory() {
+  const [attempts, setAttempts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [selected, setSelected] = useState(null)
+
+  useEffect(() => {
+    getMyAttempts()
+      .then((data) => setAttempts(data ?? []))
+      .catch((err) => setError(err.message || 'Không tải được lịch sử thi'))
+      .finally(() => setLoading(false))
+  }, [])
 
   return (
     <div className="min-h-screen bg-ivory">
       <div className="max-w-4xl mx-auto px-10 py-10">
         <h1 className="font-display text-3xl text-navy">Lịch sử thi</h1>
         <p className="font-body text-sm text-slate-soft mt-1">
-          Xem lại điểm số và trạng thái giám thị của các bài thi đã tham gia.
+          Xem lại điểm số và trạng thái các bài thi đã tham gia.
         </p>
 
+        {loading && <p className="font-body text-sm text-slate-soft mt-8">Đang tải…</p>}
+        {error && <p className="font-body text-sm text-danger mt-8">{error}</p>}
+        {!loading && !error && attempts.length === 0 && (
+          <p className="font-body text-sm text-slate-soft mt-8">Bạn chưa nộp bài thi nào.</p>
+        )}
+
         <div className="mt-8 space-y-3">
-          {history.map((h) => {
-            const r = riskStyle[h.riskLevel]
+          {attempts.map((a) => {
+            const s = statusMap[a.status] ?? statusMap.PENDING_GRADING
             return (
               <button
-                key={h.id}
-                onClick={() => setSelected(h)}
+                key={a.id}
+                onClick={() => setSelected(a)}
                 className="w-full text-left bg-white border border-navy/10 rounded-lg p-5 flex items-center justify-between hover:border-amber/50 transition-colors"
               >
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-[10px] text-slate-soft uppercase tracking-wide bg-navy/5 px-2 py-0.5 rounded">
-                      {h.code}
-                    </span>
-                    <span className={`flex items-center gap-1.5 font-body text-xs ${r.color}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${r.dot}`} />
-                      {r.label}
+                    <span className={`flex items-center gap-1.5 font-body text-xs ${s.color}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+                      {s.label}
                     </span>
                   </div>
                   <h3 className="font-display text-lg text-navy mt-2">
-                    {h.course} — {h.type}
+                    {a.courseTitle} — {a.examTitle}
                   </h3>
                   <p className="font-body text-xs text-slate-soft mt-1">
-                    {h.date} · Thời gian làm bài {h.duration}
+                    {new Date(a.createdAt).toLocaleString('vi-VN')}
                   </p>
                 </div>
 
                 <div className="text-right shrink-0 ml-4">
-                  {h.status === 'graded' ? (
-                    <p className="font-mono text-2xl text-navy">{h.score.toFixed(1)}</p>
+                  {a.status === 'COMPLETED' ? (
+                    <p className="font-mono text-2xl text-navy">{a.totalScore?.toFixed(1)}</p>
                   ) : (
                     <p className="font-body text-xs text-amber-dark">Đang chấm</p>
                   )}
@@ -103,49 +70,29 @@ export default function ExamHistory() {
         </div>
       </div>
 
-      {/* Modal chi tiết */}
       {selected && (
         <div
           className="fixed inset-0 bg-navy/40 flex items-center justify-center p-6 z-50"
           onClick={() => setSelected(null)}
         >
-          <div
-            className="bg-white rounded-lg max-w-md w-full p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="bg-white rounded-lg max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between">
-              <div>
-                <p className="font-mono text-[11px] text-slate-soft">{selected.id}</p>
-                <h2 className="font-display text-xl text-navy mt-0.5">
-                  {selected.course} — {selected.type}
-                </h2>
-              </div>
-              <button
-                onClick={() => setSelected(null)}
-                className="font-body text-sm text-slate-soft hover:text-navy"
-              >
+              <h2 className="font-display text-xl text-navy">
+                {selected.courseTitle} — {selected.examTitle}
+              </h2>
+              <button onClick={() => setSelected(null)} className="font-body text-sm text-slate-soft hover:text-navy">
                 ✕
               </button>
             </div>
 
             <div className="mt-5 space-y-3 border-t border-navy/10 pt-4">
-              <Row label="Ngày thi" value={selected.date} />
-              <Row label="Thời gian làm bài" value={selected.duration} />
+              <Row label="Ngày nộp bài" value={new Date(selected.createdAt).toLocaleString('vi-VN')} />
               <Row
                 label="Điểm số"
-                value={selected.status === 'graded' ? selected.score.toFixed(1) : 'Đang chấm'}
+                value={selected.status === 'COMPLETED' ? selected.totalScore?.toFixed(1) : 'Đang chấm'}
               />
-              <Row label="Trạng thái giám thị" value={riskStyle[selected.riskLevel].label} />
+              <Row label="Trạng thái" value={statusMap[selected.status]?.label ?? selected.status} />
             </div>
-
-            {selected.riskLevel === 'flagged' && (
-              <div className="bg-amber/10 border border-amber/30 rounded-lg p-4 mt-4">
-                <p className="font-body text-xs text-navy leading-relaxed">
-                  Phiên thi này có một số cảnh báo được ghi nhận trong quá trình giám sát.
-                  Liên hệ giảng viên nếu bạn cần giải trình.
-                </p>
-              </div>
-            )}
 
             <button
               onClick={() => setSelected(null)}

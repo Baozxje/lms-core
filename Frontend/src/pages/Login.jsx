@@ -1,16 +1,28 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext.jsx'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const { login } = useAuth()
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    // TODO: nối với Cognito (Amplify Auth.signIn)
-    navigate('/dashboard')
+    setError('')
+    setLoading(true)
+    try {
+      await login(email, password)
+      navigate('/dashboard')
+    } catch (err) {
+      setError(err.message || 'Đăng nhập thất bại. Kiểm tra lại email/mật khẩu.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -114,15 +126,26 @@ export default function Login() {
 
             <button
               type="submit"
-              className="w-full rounded-md bg-navy text-ivory font-body text-sm font-medium py-2.5 hover:bg-navy-dark transition-colors"
+              disabled={loading}
+              className="w-full rounded-md bg-navy text-ivory font-body text-sm font-medium py-2.5 hover:bg-navy-dark transition-colors disabled:opacity-60"
             >
-              Vào hệ thống
+              {loading ? 'Đang đăng nhập…' : 'Vào hệ thống'}
             </button>
           </form>
 
+          {error && (
+            <p className="font-body text-xs text-danger mt-4 text-center">{error}</p>
+          )}
+
           <p className="font-body text-xs text-slate-soft mt-8 text-center">
-            Gặp sự cố đăng nhập? Liên hệ phòng đào tạo.
-          </p>
+  Chưa có tài khoản?{' '}
+  <a href="/register" className="text-amber-dark hover:underline">
+    Đăng ký ngay
+  </a>
+</p>
+<p className="font-body text-xs text-slate-soft mt-2 text-center">
+  Gặp sự cố đăng nhập? Liên hệ phòng đào tạo.
+</p>
         </div>
       </div>
     </div>

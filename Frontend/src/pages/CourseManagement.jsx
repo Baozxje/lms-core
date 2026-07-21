@@ -1,57 +1,46 @@
-import { useState } from 'react'
-
-const initialCourses = [
-  {
-    id: 1,
-    code: 'CS201',
-    name: 'Cấu trúc dữ liệu & giải thuật',
-    students: 42,
-    exams: [
-      { id: 1, title: 'Kiểm tra giữa kỳ', date: '05/06/2026', questions: 20 },
-      { id: 2, title: 'Thi cuối kỳ', date: '20/07/2026', questions: 30 },
-    ],
-  },
-  {
-    id: 2,
-    code: 'CS304',
-    name: 'Cơ sở dữ liệu',
-    students: 35,
-    exams: [{ id: 3, title: 'Thi giữa kỳ', date: '25/07/2026', questions: 25 }],
-  },
-]
+import { useEffect, useState } from 'react'
+import { getCourses, createCourse } from '../api/courses.js'
 
 export default function CourseManagement() {
-  const [courses, setCourses] = useState(initialCourses)
-  const [expandedId, setExpandedId] = useState(1)
-  const [modalCourseId, setModalCourseId] = useState(null)
-  const [form, setForm] = useState({ title: '', date: '', questions: '' })
+  const [courses, setCourses] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [modalOpen, setModalOpen] = useState(false)
+  const [form, setForm] = useState({ title: '', description: '', price: '' })
+  const [thumbnailFile, setThumbnailFile] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
-  function openModal(courseId) {
-    setModalCourseId(courseId)
-    setForm({ title: '', date: '', questions: '' })
+  function loadCourses() {
+    setLoading(true)
+    getCourses()
+      .then((page) => setCourses(page?.content ?? []))
+      .catch((err) => setError(err.message || 'Không tải được danh sách khóa học'))
+      .finally(() => setLoading(false))
   }
 
-  function handleCreateExam(e) {
+  useEffect(() => {
+    loadCourses()
+  }, [])
+
+  async function handleCreateCourse(e) {
     e.preventDefault()
-    setCourses((prev) =>
-      prev.map((c) =>
-        c.id === modalCourseId
-          ? {
-              ...c,
-              exams: [
-                ...c.exams,
-                {
-                  id: Date.now(),
-                  title: form.title,
-                  date: form.date,
-                  questions: Number(form.questions) || 0,
-                },
-              ],
-            }
-          : c
+    setSubmitError('')
+    setSubmitting(true)
+    try {
+      await createCourse(
+        { title: form.title, description: form.description, price: Number(form.price) || 0 },
+        thumbnailFile
       )
-    )
-    setModalCourseId(null)
+      setModalOpen(false)
+      setForm({ title: '', description: '', price: '' })
+      setThumbnailFile(null)
+      loadCourses()
+    } catch (err) {
+      setSubmitError(err.message || 'Tạo khóa học thất bại. Kiểm tra lại quyền tài khoản (cần vai trò giảng viên).')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -73,129 +62,121 @@ export default function CourseManagement() {
           <div>
             <h1 className="font-display text-3xl text-navy">Khóa học & đề thi</h1>
             <p className="font-body text-sm text-slate-soft mt-1">
-              Quản lý danh sách khóa học và các bài thi trong từng môn.
+              {loading ? 'Đang tải...' : `${courses.length} khóa học trong hệ thống.`}
             </p>
           </div>
+          <button
+            onClick={() => setModalOpen(true)}
+            className="font-body text-sm bg-navy text-ivory font-medium px-4 py-2.5 rounded-md hover:bg-navy-dark transition-colors"
+          >
+            + Tạo khóa học mới
+          </button>
         </header>
 
-        <div className="space-y-4">
-          {courses.map((c) => {
-            const expanded = expandedId === c.id
-            return (
-              <div key={c.id} className="bg-white border border-navy/10 rounded-lg overflow-hidden">
-                <button
-                  onClick={() => setExpandedId(expanded ? null : c.id)}
-                  className="w-full flex items-center justify-between px-5 py-4 hover:bg-navy/5 transition-colors"
-                >
-                  <div className="text-left">
-                    <span className="font-mono text-[11px] text-slate-soft">{c.code}</span>
-                    <p className="font-display text-lg text-navy">{c.name}</p>
-                    <p className="font-body text-xs text-slate-soft mt-0.5">
-                      {c.students} sinh viên · {c.exams.length} bài thi
-                    </p>
-                  </div>
-                  <span className="font-body text-slate-soft text-lg">{expanded ? '−' : '+'}</span>
-                </button>
+        {error && <p className="font-body text-sm text-danger mb-4">{error}</p>}
 
-                {expanded && (
-                  <div className="border-t border-navy/10 px-5 py-4">
-                    <div className="space-y-2">
-                      {c.exams.map((ex) => (
-                        <div
-                          key={ex.id}
-                          className="flex items-center justify-between font-body text-sm py-2 border-b border-navy/5 last:border-0"
-                        >
-                          <span className="text-navy">{ex.title}</span>
-                          <span className="font-mono text-xs text-slate-soft">
-                            {ex.date} · {ex.questions} câu
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                    <button
-                      onClick={() => openModal(c.id)}
-                      className="mt-4 font-body text-xs text-amber-dark hover:underline"
-                    >
-                      + Tạo đề thi mới
-                    </button>
-                  </div>
-                )}
+        {!loading && !error && courses.length === 0 && (
+          <p className="font-body text-sm text-slate-soft">Chưa có khóa học nào. Bấm "Tạo khóa học mới" để bắt đầu.</p>
+        )}
+
+        <div className="space-y-3">
+          {courses.map((c) => (
+            <div key={c.id} className="bg-white border border-navy/10 rounded-lg p-5 flex items-center gap-4">
+              {c.thumbnailUrl && (
+                <img
+                  src={c.thumbnailUrl}
+                  alt=""
+                  className="w-20 h-20 rounded-md object-cover shrink-0 bg-navy/5"
+                />
+              )}
+              <div className="flex-1">
+                <p className="font-mono text-[11px] text-slate-soft">{c.instructorName}</p>
+                <p className="font-display text-lg text-navy">{c.title}</p>
+                <p className="font-body text-xs text-slate-soft mt-1 line-clamp-2">{c.description}</p>
               </div>
-            )
-          })}
+              {c.price != null && (
+                <p className="font-mono text-sm text-amber-dark shrink-0">
+                  {c.price === 0 ? 'Miễn phí' : `${c.price.toLocaleString('vi-VN')}đ`}
+                </p>
+              )}
+            </div>
+          ))}
         </div>
       </main>
 
-      {/* Modal tạo đề thi */}
-      {modalCourseId && (
+      {modalOpen && (
         <div
           className="fixed inset-0 bg-navy/40 flex items-center justify-center p-6 z-50"
-          onClick={() => setModalCourseId(null)}
+          onClick={() => !submitting && setModalOpen(false)}
         >
           <form
-            onSubmit={handleCreateExam}
+            onSubmit={handleCreateCourse}
             onClick={(e) => e.stopPropagation()}
             className="bg-white rounded-lg max-w-sm w-full p-6"
           >
-            <h2 className="font-display text-xl text-navy">Tạo đề thi mới</h2>
+            <h2 className="font-display text-xl text-navy">Tạo khóa học mới</h2>
             <div className="mt-5 space-y-4">
               <div>
-                <label className="block font-body text-xs font-medium text-navy mb-1.5">
-                  Tên bài thi
-                </label>
+                <label className="block font-body text-xs font-medium text-navy mb-1.5">Tên khóa học</label>
                 <input
                   required
                   value={form.title}
                   onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                  placeholder="VD: Thi cuối kỳ"
+                  placeholder="VD: Cấu trúc dữ liệu & giải thuật"
                   className="w-full rounded-md border border-navy/15 px-3.5 py-2.5 font-body text-sm focus:border-amber focus:outline-none focus:ring-1 focus:ring-amber"
                 />
               </div>
               <div>
-                <label className="block font-body text-xs font-medium text-navy mb-1.5">
-                  Ngày thi
-                </label>
-                <input
+                <label className="block font-body text-xs font-medium text-navy mb-1.5">Mô tả</label>
+                <textarea
                   required
-                  type="date"
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      date: new Date(e.target.value).toLocaleDateString('vi-VN'),
-                    }))
-                  }
-                  className="w-full rounded-md border border-navy/15 px-3.5 py-2.5 font-body text-sm focus:border-amber focus:outline-none focus:ring-1 focus:ring-amber"
+                  rows={3}
+                  value={form.description}
+                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                  className="w-full rounded-md border border-navy/15 px-3.5 py-2.5 font-body text-sm focus:border-amber focus:outline-none focus:ring-1 focus:ring-amber resize-none"
                 />
               </div>
               <div>
-                <label className="block font-body text-xs font-medium text-navy mb-1.5">
-                  Số câu hỏi
-                </label>
+                <label className="block font-body text-xs font-medium text-navy mb-1.5">Giá (VNĐ, để 0 nếu miễn phí)</label>
                 <input
-                  required
                   type="number"
-                  min="1"
-                  value={form.questions}
-                  onChange={(e) => setForm((f) => ({ ...f, questions: e.target.value }))}
-                  placeholder="VD: 20"
+                  min="0"
+                  value={form.price}
+                  onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+                  placeholder="0"
                   className="w-full rounded-md border border-navy/15 px-3.5 py-2.5 font-body text-sm focus:border-amber focus:outline-none focus:ring-1 focus:ring-amber"
+                />
+              </div>
+              <div>
+                <label className="block font-body text-xs font-medium text-navy mb-1.5">Ảnh thumbnail (tùy chọn)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setThumbnailFile(e.target.files?.[0] ?? null)}
+                  className="w-full font-body text-sm"
                 />
               </div>
             </div>
 
+            {submitError && (
+              <p className="font-body text-xs text-danger mt-3">{submitError}</p>
+            )}
+
             <div className="flex gap-3 mt-6">
               <button
                 type="button"
-                onClick={() => setModalCourseId(null)}
-                className="flex-1 font-body text-sm border border-navy/20 text-navy font-medium py-2.5 rounded-md hover:bg-navy/5 transition-colors"
+                disabled={submitting}
+                onClick={() => setModalOpen(false)}
+                className="flex-1 font-body text-sm border border-navy/20 text-navy font-medium py-2.5 rounded-md hover:bg-navy/5 transition-colors disabled:opacity-50"
               >
                 Hủy
               </button>
               <button
                 type="submit"
-                className="flex-1 font-body text-sm bg-navy text-ivory font-medium py-2.5 rounded-md hover:bg-navy-dark transition-colors"
+                disabled={submitting}
+                className="flex-1 font-body text-sm bg-navy text-ivory font-medium py-2.5 rounded-md hover:bg-navy-dark transition-colors disabled:opacity-60"
               >
-                Tạo đề thi
+                {submitting ? 'Đang tạo…' : 'Tạo khóa học'}
               </button>
             </div>
           </form>

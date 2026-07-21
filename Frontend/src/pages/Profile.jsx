@@ -1,17 +1,14 @@
 import { useState } from 'react'
+import { useAuth } from '../context/AuthContext.jsx'
 
 export default function Profile() {
-  const [form, setForm] = useState({
-    name: 'Nguyễn Thảo',
-    mssv: '20210458',
-    email: 'thao.nguyen@student.edu.vn',
-  })
+  const { user } = useAuth()
   const [pw, setPw] = useState({ current: '', next: '', confirm: '' })
   const [saved, setSaved] = useState(false)
 
   function handleSavePassword(e) {
     e.preventDefault()
-    // TODO: gọi API đổi mật khẩu qua Cognito
+    // TODO: gọi API đổi mật khẩu qua Cognito (ChangePassword / ForgotPassword flow)
     setSaved(true)
     setPw({ current: '', next: '', confirm: '' })
     setTimeout(() => setSaved(false), 3000)
@@ -28,21 +25,21 @@ export default function Profile() {
         <section className="bg-white border border-navy/10 rounded-lg p-6 mt-8">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-full bg-amber/20 flex items-center justify-center font-display text-lg text-amber-dark">
-              {form.name.split(' ').slice(-1)[0][0]}
+              {(user?.name ?? '?').slice(0, 1).toUpperCase()}
             </div>
             <div>
-              <p className="font-display text-lg text-navy">{form.name}</p>
-              <p className="font-mono text-xs text-slate-soft">MSSV {form.mssv}</p>
+              <p className="font-display text-lg text-navy">{user?.name ?? 'Đang tải...'}</p>
+              <p className="font-mono text-xs text-slate-soft">{user?.email}</p>
             </div>
           </div>
 
           <div className="mt-6 space-y-4">
-            <Field label="Họ và tên" value={form.name} disabled />
-            <Field label="MSSV" value={form.mssv} disabled />
-            <Field label="Email" value={form.email} disabled />
+            <Field label="Họ và tên" value={user?.name ?? ''} disabled />
+            <Field label="Email" value={user?.email ?? ''} disabled />
+            <Field label="Vai trò" value={user?.role ?? ''} disabled />
           </div>
           <p className="font-body text-xs text-slate-soft mt-3">
-            Thông tin này do phòng đào tạo quản lý, liên hệ nếu cần chỉnh sửa.
+            Thông tin này lấy từ tài khoản Cognito, liên hệ phòng đào tạo nếu cần chỉnh sửa.
           </p>
         </section>
 
@@ -74,7 +71,9 @@ export default function Profile() {
               Cập nhật mật khẩu
             </button>
             {saved && (
-              <p className="font-body text-xs text-success">✓ Đã cập nhật mật khẩu thành công</p>
+              <p className="font-body text-xs text-success">
+                ✓ (Demo) Chưa nối API đổi mật khẩu thật — cần thêm endpoint Cognito ChangePassword ở backend
+              </p>
             )}
           </form>
         </section>
