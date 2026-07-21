@@ -11,6 +11,8 @@ import AIReport from './pages/AIReport.jsx'
 import Profile from './pages/Profile.jsx'
 import ErrorPage from './pages/ErrorPage.jsx'
 import CourseManagement from './pages/CourseManagement.jsx'
+import StudentManagement from './pages/StudentManagement.jsx'
+import Settings from './pages/Settings.jsx'
 
 export default function App() {
   return (
@@ -28,6 +30,8 @@ export default function App() {
         <Route path="/report" element={<AIReport />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin/courses" element={<CourseManagement />} />
+        <Route path="/admin/students" element={<StudentManagement />} />
+        <Route path="/admin/settings" element={<Settings />} />
         <Route path="/403" element={<ErrorPage code={403} />} />
         <Route path="*" element={<ErrorPage code={404} />} />
       </Routes>
