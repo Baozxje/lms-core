@@ -40,11 +40,12 @@ export function AuthProvider({ children }) {
 
 function claimsToUser(claims) {
   if (!claims) return null
+  const groups = claims['cognito:groups'] || []
   return {
     sub: claims.sub,
     name: claims.name || claims.email || 'Người dùng',
     email: claims.email,
-    role: claims['custom:role'] || 'STUDENT',
+    role: groups.includes('INSTRUCTOR') ? 'INSTRUCTOR' : 'STUDENT',
   }
 }
 

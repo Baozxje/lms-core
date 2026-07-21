@@ -15,6 +15,7 @@ import StudentManagement from './pages/StudentManagement.jsx'
 import Settings from './pages/Settings.jsx'
 import Register from './pages/Register.jsx'
 import ConfirmSignup from './pages/ConfirmSignup.jsx'
+import RequireInstructor from './components/RequireInstructor.jsx'
 
 export default function App() {
   return (
@@ -26,16 +27,16 @@ export default function App() {
         <Route path="/confirm" element={<ConfirmSignup />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/exam/:examId" element={<ExamRoom />} />
-        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin" element={<RequireInstructor><AdminDashboard /></RequireInstructor>} />
         <Route path="/course/:id" element={<CourseDetail />} />
         <Route path="/exam-checkin/:examId" element={<ExamCheckIn />} />
         <Route path="/exam-submitted" element={<ExamSubmitted />} />
         <Route path="/history" element={<ExamHistory />} />
         <Route path="/report" element={<AIReport />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/admin/courses" element={<CourseManagement />} />
-        <Route path="/admin/students" element={<StudentManagement />} />
-        <Route path="/admin/settings" element={<Settings />} />
+        <Route path="/admin/courses" element={<RequireInstructor><CourseManagement /></RequireInstructor>} />
+        <Route path="/admin/students" element={<RequireInstructor><StudentManagement /></RequireInstructor>} />
+        <Route path="/admin/settings" element={<RequireInstructor><Settings /></RequireInstructor>} />
         <Route path="/403" element={<ErrorPage code={403} />} />
         <Route path="*" element={<ErrorPage code={404} />} />
       </Routes>

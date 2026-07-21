@@ -37,6 +37,7 @@ export default function ExamRoom() {
   ])
   const [camStatus, setCamStatus] = useState('connecting')
   const videoRef = useRef(null)
+  const startTimeRef = useRef(Date.now())
 
   // Tải đề thi thật
   useEffect(() => {
@@ -116,25 +117,34 @@ export default function ExamRoom() {
   }
 
   async function handleSubmit() {
-    if (!window.confirm('Bạn chắc chắn muốn nộp bài? Sau khi nộp sẽ không thể chỉnh sửa.')) return
+  if (!window.confirm('Bạn chắc chắn muốn nộp bài? Sau khi nộp sẽ không thể chỉnh sửa.')) return
 
-    setSubmitError('')
-    setSubmitting(true)
-    try {
-      const answerList = questions.map((question) => ({
-        questionId: question.id,
-        selectedOptionId: answers[question.id]?.selectedOptionId ?? null,
-        answerText: answers[question.id]?.answerText ?? null,
-      }))
-      await submitExam(examId, answerList)
-      navigate('/exam-submitted')
-    } catch (err) {
-      setSubmitError(err.message || 'Nộp bài thất bại, vui lòng thử lại.')
-    } finally {
-      setSubmitting(false)
-    }
+  setSubmitError('')
+  setSubmitting(true)
+  try {
+    const answerList = questions.map((question) => ({
+      questionId: question.id,
+      selectedOptionId: answers[question.id]?.selectedOptionId ?? null,
+      answerText: answers[question.id]?.answerText ?? null,
+    }))
+    await submitExam(examId, answerList)
+
+    const elapsedSeconds = Math.round((Date.now() - startTimeRef.current) / 1000)
+    navigate('/exam-submitted', {
+      state: {
+        examTitle: exam.title,
+        submittedAt: new Date().toISOString(),
+        elapsedSeconds,
+        answeredCount,
+        totalQuestions: questions.length,
+      },
+    })
+  } catch (err) {
+    setSubmitError(err.message || 'Nộp bài thất bại, vui lòng thử lại.')
+  } finally {
+    setSubmitting(false)
   }
-
+}
   return (
     <div className="min-h-screen bg-ivory flex flex-col">
       {!online && <OfflineOverlay />}

@@ -12,18 +12,18 @@ export default function Login() {
   const { login } = useAuth()
 
   async function handleSubmit(e) {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-    try {
-      await login(email, password)
-      navigate('/dashboard')
-    } catch (err) {
-      setError(err.message || 'Đăng nhập thất bại. Kiểm tra lại email/mật khẩu.')
-    } finally {
-      setLoading(false)
-    }
+  e.preventDefault()
+  setError('')
+  setLoading(true)
+  try {
+    const loggedInUser = await login(email, password)
+    navigate(loggedInUser?.role === 'INSTRUCTOR' ? '/admin' : '/dashboard')
+  } catch (err) {
+    setError(err.message || 'Đăng nhập thất bại. Kiểm tra lại email/mật khẩu.')
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext.jsx'
 import {
   getCourseById,
   getSectionsByCourse,
@@ -26,6 +27,8 @@ const emptyQuestion = () => ({
 export default function CourseDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const isInstructor = user?.role === 'INSTRUCTOR'
   const [tab, setTab] = useState(0)
   const [course, setCourse] = useState(null)
   const [sections, setSections] = useState([])
@@ -281,7 +284,7 @@ export default function CourseDetail() {
               </button>
             ))}
           </div>
-          {tab === 0 && (
+          {tab === 0 && isInstructor && (
             <button
               onClick={() => {
                 setSectionModalOpen(true)
@@ -292,7 +295,7 @@ export default function CourseDetail() {
               + Thêm chương
             </button>
           )}
-          {tab === 1 && (
+          {tab === 1 && isInstructor && (
             <button onClick={openExamModal} className="font-body text-xs text-amber-dark hover:underline mb-2">
               + Tạo đề thi
             </button>
@@ -341,12 +344,14 @@ export default function CourseDetail() {
                           </div>
                         ))}
                       </div>
-                      <button
-                        onClick={() => openLessonModal(section.id)}
-                        className="mt-4 font-body text-xs text-amber-dark hover:underline"
-                      >
-                        + Thêm bài học
-                      </button>
+                      {isInstructor && (
+                        <button
+                          onClick={() => openLessonModal(section.id)}
+                          className="mt-4 font-body text-xs text-amber-dark hover:underline"
+                        >
+                          + Thêm bài học
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>

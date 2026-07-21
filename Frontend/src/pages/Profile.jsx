@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 
 export default function Profile() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const [pw, setPw] = useState({ current: '', next: '', confirm: '' })
   const [saved, setSaved] = useState(false)
 
@@ -12,6 +14,11 @@ export default function Profile() {
     setSaved(true)
     setPw({ current: '', next: '', confirm: '' })
     setTimeout(() => setSaved(false), 3000)
+  }
+
+  function handleLogout() {
+    logout()
+    navigate('/login')
   }
 
   return (
@@ -77,6 +84,13 @@ export default function Profile() {
             )}
           </form>
         </section>
+
+        <button
+          onClick={handleLogout}
+          className="w-full mt-6 font-body text-sm border border-danger/30 text-danger font-medium py-2.5 rounded-md hover:bg-danger/5 transition-colors"
+        >
+          Đăng xuất
+        </button>
       </div>
     </div>
   )
