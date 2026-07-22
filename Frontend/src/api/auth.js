@@ -24,3 +24,10 @@ export async function confirmSignUp(email, confirmationCode) {
     skipAuth: true,
   })
 }
+
+export async function changePassword(email, currentPassword, newPassword) {
+  return apiFetch('/api/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ email, currentPassword, newPassword }),
+  })
+}

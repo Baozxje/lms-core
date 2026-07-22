@@ -60,3 +60,29 @@ export async function createLesson({ sectionId, title, content, lessonOrder }, v
     body: formData,
   })
 }
+export async function deleteSection(sectionId) {
+  return apiFetch(`/api/v1/sections/${sectionId}`, { method: 'DELETE' })
+}
+
+export async function deleteLesson(lessonId) {
+  return apiFetch(`/api/v1/lessons/${lessonId}`, { method: 'DELETE' })
+}
+export async function updateCourse(id, { title, description, price }, thumbnailFile) {
+  const formData = new FormData()
+  formData.append(
+    'data',
+    new Blob([JSON.stringify({ title, description, price })], { type: 'application/json' })
+  )
+  if (thumbnailFile) {
+    formData.append('thumbnail', thumbnailFile)
+  }
+
+  return apiFetch(`/api/v1/courses/${id}`, {
+    method: 'PUT',
+    body: formData,
+  })
+}
+
+export async function deleteCourse(id) {
+  return apiFetch(`/api/v1/courses/${id}`, { method: 'DELETE' })
+}

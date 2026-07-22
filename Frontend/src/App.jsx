@@ -32,7 +32,7 @@ export default function App() {
         <Route path="/exam-checkin/:examId" element={<ExamCheckIn />} />
         <Route path="/exam-submitted" element={<ExamSubmitted />} />
         <Route path="/history" element={<ExamHistory />} />
-        <Route path="/report" element={<AIReport />} />
+        <Route path="/report/:attemptId" element={<AIReport />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin/courses" element={<RequireInstructor><CourseManagement /></RequireInstructor>} />
         <Route path="/admin/students" element={<RequireInstructor><StudentManagement /></RequireInstructor>} />

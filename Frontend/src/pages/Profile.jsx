@@ -1,19 +1,34 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import { changePassword } from '../api/auth.js'
 
 export default function Profile() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [pw, setPw] = useState({ current: '', next: '', confirm: '' })
   const [saved, setSaved] = useState(false)
+  const [pwError, setPwError] = useState('')
+  const [pwSubmitting, setPwSubmitting] = useState(false)
 
-  function handleSavePassword(e) {
+  async function handleSavePassword(e) {
     e.preventDefault()
-    // TODO: gọi API đổi mật khẩu qua Cognito (ChangePassword / ForgotPassword flow)
-    setSaved(true)
-    setPw({ current: '', next: '', confirm: '' })
-    setTimeout(() => setSaved(false), 3000)
+    setPwError('')
+    if (pw.next !== pw.confirm) {
+      setPwError('Mật khẩu mới và xác nhận không khớp.')
+      return
+    }
+    setPwSubmitting(true)
+    try {
+      await changePassword(user.email, pw.current, pw.next)
+      setSaved(true)
+      setPw({ current: '', next: '', confirm: '' })
+      setTimeout(() => setSaved(false), 3000)
+    } catch (err) {
+      setPwError(err.message || 'Đổi mật khẩu thất bại.')
+    } finally {
+      setPwSubmitting(false)
+    }
   }
 
   function handleLogout() {
@@ -73,14 +88,14 @@ export default function Profile() {
             />
             <button
               type="submit"
-              className="font-body text-sm bg-navy text-ivory font-medium px-5 py-2.5 rounded-md hover:bg-navy-dark transition-colors"
+              disabled={pwSubmitting}
+              className="font-body text-sm bg-navy text-ivory font-medium px-5 py-2.5 rounded-md hover:bg-navy-dark transition-colors disabled:opacity-60"
             >
-              Cập nhật mật khẩu
+              {pwSubmitting ? 'Đang cập nhật…' : 'Cập nhật mật khẩu'}
             </button>
+            {pwError && <p className="font-body text-xs text-danger">{pwError}</p>}
             {saved && (
-              <p className="font-body text-xs text-success">
-                ✓ (Demo) Chưa nối API đổi mật khẩu thật — cần thêm endpoint Cognito ChangePassword ở backend
-              </p>
+              <p className="font-body text-xs text-success">✓ Đổi mật khẩu thành công</p>
             )}
           </form>
         </section>

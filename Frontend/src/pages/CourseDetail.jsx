@@ -8,6 +8,8 @@ import {
   getExamsByCourse,
   createSection,
   createLesson,
+  deleteSection,
+  deleteLesson,
 } from '../api/courses.js'
 import { createExam } from '../api/exams.js'
 
@@ -116,6 +118,28 @@ export default function CourseDetail() {
       setSectionError(err.message || 'Tạo chương thất bại.')
     } finally {
       setSectionSubmitting(false)
+    }
+  }
+
+  async function handleDeleteSection(sectionId, e) {
+    e.stopPropagation()
+    if (!window.confirm('Xóa chương này? Toàn bộ bài học bên trong cũng sẽ bị xóa.')) return
+    try {
+      await deleteSection(sectionId)
+      await loadCourseAndSections()
+    } catch (err) {
+      alert(err.message || 'Xóa chương thất bại.')
+    }
+  }
+
+  async function handleDeleteLesson(sectionId, lessonId, e) {
+    e.stopPropagation()
+    if (!window.confirm('Xóa bài học này?')) return
+    try {
+      await deleteLesson(lessonId)
+      await loadLessons(sectionId)
+    } catch (err) {
+      alert(err.message || 'Xóa bài học thất bại.')
     }
   }
 
@@ -315,13 +339,24 @@ export default function CourseDetail() {
               const lessons = lessonsBySection[section.id]
               return (
                 <div key={section.id} className="bg-white border border-navy/10 rounded-lg overflow-hidden">
-                  <button
-                    onClick={() => toggleSection(section.id)}
-                    className="w-full flex items-center justify-between px-5 py-4 hover:bg-navy/5 transition-colors"
-                  >
-                    <p className="font-display text-lg text-navy text-left">{section.title}</p>
-                    <span className="font-body text-slate-soft text-lg">{expanded ? '−' : '+'}</span>
-                  </button>
+                  <div className="w-full flex items-center justify-between px-5 py-4 hover:bg-navy/5 transition-colors">
+                    <button onClick={() => toggleSection(section.id)} className="flex-1 text-left">
+                      <p className="font-display text-lg text-navy">{section.title}</p>
+                    </button>
+                    <div className="flex items-center gap-3 shrink-0">
+                      {isInstructor && (
+                        <button
+                          onClick={(e) => handleDeleteSection(section.id, e)}
+                          className="font-body text-xs text-danger hover:underline"
+                        >
+                          Xóa
+                        </button>
+                      )}
+                      <button onClick={() => toggleSection(section.id)} className="font-body text-slate-soft text-lg">
+                        {expanded ? '−' : '+'}
+                      </button>
+                    </div>
+                  </div>
 
                   {expanded && (
                     <div className="border-t border-navy/10 px-5 py-4">
@@ -338,9 +373,19 @@ export default function CourseDetail() {
                             className="flex items-center justify-between font-body text-sm py-2 border-b border-navy/5 last:border-0"
                           >
                             <span className="text-navy">{lesson.title}</span>
-                            {lesson.videoUrl && (
-                              <span className="font-mono text-[10px] text-amber-dark uppercase">Video</span>
-                            )}
+                            <div className="flex items-center gap-3">
+                              {lesson.videoUrl && (
+                                <span className="font-mono text-[10px] text-amber-dark uppercase">Video</span>
+                              )}
+                              {isInstructor && (
+                                <button
+                                  onClick={(e) => handleDeleteLesson(section.id, lesson.id, e)}
+                                  className="font-body text-xs text-danger hover:underline"
+                                >
+                                  Xóa
+                                </button>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>

@@ -128,6 +128,13 @@ export default function AdminDashboard() {
                   value={selected.status === 'COMPLETED' ? selected.totalScore?.toFixed(1) : 'Đang chấm'}
                 />
               </div>
+
+              <button
+                onClick={() => navigate(`/report/${selected.id}`)}
+                className="w-full mt-5 font-body text-sm bg-navy text-ivory font-medium py-2.5 rounded-md hover:bg-navy-dark transition-colors"
+              >
+                Xem chi tiết bài làm
+              </button>
             </aside>
           )}
         </div>

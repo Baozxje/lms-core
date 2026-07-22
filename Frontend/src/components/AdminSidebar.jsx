@@ -4,7 +4,6 @@ const items = [
   { label: 'Tổng quan giám thị', path: '/admin' },
   { label: 'Khóa học & đề thi', path: '/admin/courses' },
   { label: 'Sinh viên', path: '/admin/students' },
-  { label: 'Báo cáo AI', path: '/report' },
   { label: 'Cài đặt', path: '/admin/settings' },
 ]
 

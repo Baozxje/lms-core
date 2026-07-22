@@ -7,3 +7,6 @@ export async function getMyAttempts() {
 export async function getAttemptsByCourse(courseId) {
   return apiFetch(`/api/v1/attempts/course/${courseId}`)
 }
+export async function getAttemptDetail(attemptId) {
+  return apiFetch(`/api/v1/attempts/${attemptId}`)
+}
